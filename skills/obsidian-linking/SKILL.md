@@ -16,6 +16,39 @@ Read `../obsidian-documentation/references/conventions.md` first.
 3. **Update neighbors.** When a new note mentions an existing topic, add the link in the new note **and** consider whether the existing note should mention the new one ("Refunds" should appear in "Payments"' Related section).
 4. **Link meaningfully.** Link the first mention of a concept in a note; don't link every repetition. Use aliases for readable prose: `[[Payment Processing|payments]]`.
 
+## Structural vs conceptual links
+
+Treat the two kinds of links differently:
+
+- **Structural links** mirror how the system and vault are organized: note → its MOC, feature → its architecture area, ADR → affected notes. Mandatory, checked every run (rules above).
+- **Conceptual links** connect ideas that belong together in a reader's head even though no hierarchy joins them: `[[Refunds]] ↔ [[Fraud Detection]]`, because both reason about reversed payments. Suggested, never forced.
+
+A vault needs both: structural links make it navigable, conceptual links make it intelligent.
+
+## Suggesting meaningful links
+
+A conceptual link needs a reason you can write down in one line: shared domain concept, same external dependency, one consumes the other's output, common failure mode. "Both mention Stripe once" is not a reason; "both implement Stripe webhook handling" is. Put the reason in the Related entry so future readers know why the link exists:
+
+```markdown
+- [[Fraud Detection]] — also consumes payment-reversal events
+```
+
+If you can't name the reason, don't suggest the link — noisy links bury the meaningful ones.
+
+## Missing links (concept gaps)
+
+Orphan detection finds unlinked *files*; also look for unlinked *concepts*:
+
+- A term appearing in 3+ notes that has no note of its own → suggest a stub note (or a home in an existing note) and link the mentions to it
+- Two notes sharing several distinctive terms that never link to each other → suggest the pair, naming the shared concept
+- A MOC section whose theme clearly has matching notes scattered elsewhere that aren't listed
+
+Present these as suggestions for the user to approve — concept gaps need human judgment about whether the concept deserves a note.
+
+## Clustering → MOC suggestions
+
+While linking, watch for clusters: 4+ notes that keep linking to each other, or share a tag/domain, but have no shared MOC section. Suggest either a new section in an existing MOC, or — at 5+ notes in a distinct domain — a new MOC (threshold below). Name the cluster after the concept, not the folder: "Payment lifecycle", not "misc backend notes".
+
 ## MOCs
 
 A MOC (Map of Content) is a curated index note in `MOCs/`, one per major domain: `Features MOC.md`, `Architecture MOC.md`, `ADRs MOC.md`, `Backend MOC.md`, `Frontend MOC.md`, `Integrations MOC.md`, `Infrastructure MOC.md`, plus a root `Home MOC.md` linking to all MOCs.

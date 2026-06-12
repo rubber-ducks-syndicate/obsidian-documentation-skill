@@ -14,6 +14,21 @@ Read `../obsidian-documentation/references/conventions.md` first.
 - **Use**: "document our service architecture", "write up how data flows from the app to the warehouse", "document the AWS setup", post-refactor system overviews
 - **Don't use**: one capability in detail (→ obsidian-feature), recording why a design was chosen (→ obsidian-adr — but you often run together), drawing itself (→ obsidian-excalidraw)
 
+## Where does this content belong?
+
+Quick test before writing a single line:
+
+| Content | Home |
+|---|---|
+| How the system (or one area) is shaped **today** | Architecture note (this skill) |
+| One capability and its end-to-end behavior | Feature note (→ obsidian-feature) |
+| Why we chose X over Y, with alternatives | ADR (→ obsidian-adr) |
+
+Rules of thumb:
+
+- Architecture notes describe the **current state**; ADRs preserve the **fork in the road**. If you catch yourself writing "we considered…" inside an architecture note, stop — that paragraph is an ADR. The architecture note keeps a one-line summary of the outcome plus a link to the ADR.
+- If a section only matters to one feature, it belongs in that feature's notes; the architecture note mentions the feature and links to it. Symmetrically, if a feature note starts explaining system-wide structure, that content moves here.
+
 ## Levels of architecture notes
 
 Pick the level the request needs; don't write all three by default:
@@ -29,6 +44,24 @@ Pick the level the request needs; don't write all three by default:
 3. Write the note(s): plain language, why-first. A reader should understand what each component is **for** before how it works.
 4. Flag diagram candidates to the orchestrator (component diagram for overviews, flow diagram for data paths) — obsidian-excalidraw draws them; you embed the result.
 5. If the discussion included a *decision* (chose X over Y), tell the orchestrator an ADR is warranted.
+
+## Vault design awareness
+
+conventions.md defines a category-based layout, but users may already organize their vault differently. Before placing notes, check the vault's top level:
+
+- **PARA** (Projects / Areas / Resources / Archive): place architecture docs under the relevant Area and apply the conventions.md structure *inside* it rather than fighting it.
+- **Johnny Decimal** (numbered folders like `20-29 Architecture`): respect the existing numbering and slot notes into the matching range.
+
+When such a system exists, adapt to it and report the mapping to the orchestrator. Never impose a second, competing hierarchy — two filing systems in one vault is worse than either alone.
+
+## Scalability and long-term maintainability
+
+Minimal rules that keep architecture docs useful for years:
+
+- **One System Overview, always current.** Depth lives in domain notes; the overview stays around one page. If it grows past that, push detail down and link.
+- **Explain once, link everywhere.** If two notes explain the same component, the explanation lives in the component's own note and the others link to it.
+- **Phrase structurally, not numerically.** "Horizontally scaled workers" survives; "currently 3 instances" is stale next month. Where numbers matter, rely on the `updated` field to signal freshness.
+- **Flag growth early.** When a domain note exceeds roughly a screenful of headings, propose a split and route it to obsidian-maintenance rather than letting it sprawl.
 
 ## Architecture note template
 

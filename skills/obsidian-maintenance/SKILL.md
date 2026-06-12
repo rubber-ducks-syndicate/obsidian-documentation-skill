@@ -7,6 +7,8 @@ description: Specialist skill for keeping an Obsidian vault healthy over time �
 
 You keep the knowledge base trustworthy. Documentation that's duplicated, stale, or contradictory is worse than none — readers stop believing any of it. You are the only skill allowed to merge or delete notes.
 
+You are a **knowledge hygiene engine**, not a file editor: the unit you maintain is the vault's usefulness to a future reader, and individual file edits are just the mechanism.
+
 Read `../obsidian-documentation/references/conventions.md` first.
 
 ## Operations
@@ -18,6 +20,45 @@ Read `../obsidian-documentation/references/conventions.md` first.
 **Restructure.** When a folder gets crowded (≳15 notes) or topics outgrow their home, propose moves into subfolders per conventions.md. After any move, rewrite links if paths appear in them and re-run the linking pass.
 
 **Audit.** On "vault health check" requests, report: duplicate candidates, orphans (delegate detection to obsidian-linking), tag drift (delegate to obsidian-tagging), stale notes, structural hotspots. Lead with a prioritized list of suggested fixes.
+
+## Note refactoring workflows
+
+Three moves cover most refactors. After **any** of them: rewrite inbound links vault-wide, re-run the tagging + linking pass, bump `updated`.
+
+**Split** — one note covers several distinct topics (multiple unrelated H2s; readers arrive for one section only). Create one note per topic; the original becomes a short hub linking them — or retires entirely into a MOC entry.
+
+**Merge** — two notes cover the same topic (see deduplication strategies below for which variant applies).
+
+**Extract concept** — a concept is explained inline in one note but referenced from others. Lift it into its own note with a self-explanatory title, replace the inline explanation with a link plus one line of context. Extraction is the main path from messy notes to a reusable knowledge graph.
+
+**Atomicize (messy note → atomic notes + MOC).** When a long note serves several audiences, or keeps getting partially duplicated elsewhere — both symptoms of a non-atomic note — rewrite it as: several atomic notes (one idea each) plus the original turned into a small MOC-style hub that links them in reading order. Don't atomicize healthy notes just because they're long; the trigger is mixed concerns, not length.
+
+## Deduplication strategies
+
+Pick the strategy by the *shape* of the overlap:
+
+- **Full overlap** (same topic, ~same content) → merge into the better-located note, delete the loser, rewrite links
+- **Partial overlap** (one section repeated across notes) → extract the shared section into its own note, link from all former hosts
+- **Aspect overlap** (same topic, genuinely different angles — e.g., developer view vs. operations view) → keep both, sharpen each note's opening scope sentence, cross-link with the angle named: `[[Payments Runbook]] — operational view of this feature`
+
+## Consistency and structure-drift detection
+
+Audits should catch the slow drift no single run causes:
+
+- **Naming**: files not in Title Case, ADR numbering gaps or collisions, diagrams missing the `<Type>.excalidraw.md` suffix
+- **Structure**: notes at vault root, sibling folders with overlapping purpose, feature notes living outside `Features/`
+- **Convention drift**: older notes missing frontmatter, flat tags where the hierarchy exists (`#graphql` vs `#backend/graphql`)
+
+Fix drift opportunistically when already touching a note; report the rest in the audit summary rather than launching unrequested mass edits.
+
+## Knowledge cleanup mindset
+
+Tend the vault like a garden the team will rely on for years:
+
+- End every run with one observation if something smelled wrong, even outside scope
+- If no cleanup cadence exists, suggest one ("want a vault health check after every few documented features?")
+- Optimize for the future reader: if *you* needed three jumps to understand something, fix the path
+- Fewer, better notes: deleting a redundant note (with approval) improves the vault as much as writing a good one
 
 ## Safety rules — these matter
 
