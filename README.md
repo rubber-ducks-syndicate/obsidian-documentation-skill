@@ -1,39 +1,92 @@
 # Obsidian Documentation Skill System
 
-A modular orchestrator + specialists ecosystem for Claude Code that turns code changes and conversations into structured, linked Obsidian documentation.
+A modular orchestrator + specialists ecosystem for Claude Code that turns code changes and conversations into structured, linked, project-scoped Obsidian documentation — and keeps it healthy over time.
 
 ## Installation
 
-Copy the contents of `skills/` into your project's `.claude/skills/` directory:
+Copy `skills/` and `agents/` into your project's `.claude/` directory:
 
 ```bash
 cp -r skills/* <your-repo>/.claude/skills/
+cp -r agents/* <your-repo>/.claude/agents/
 ```
 
 Result:
 
 ```
+.claude/agents/
+├── vault-scanner.md               # read-only vault sweeps (tags, orphans,
+│                                  #   duplicates, drift, staleness, concept gaps)
+└── code-context-collector.md      # read-only repo fact sheets for grounded docs
+
 .claude/skills/
-├── obsidian-documentation/        # ← the ONLY entrypoint you use
-│   ├── SKILL.md
+├── obsidian-documentation/        # ← the ONLY entrypoint you invoke directly
+│   ├── SKILL.md                   #   router, context gathering, quality gate
 │   └── references/
-│       └── conventions.md         # shared: folders, frontmatter, naming, style
+│       └── conventions.md         #   single source of truth for ALL skills
 ├── obsidian-feature/SKILL.md      # feature docs (backend + frontend)
 ├── obsidian-architecture/SKILL.md # system design, infra, integrations
-├── obsidian-adr/SKILL.md          # decision records
+├── obsidian-adr/SKILL.md          # decision records (numbered, immutable)
 ├── obsidian-excalidraw/SKILL.md   # diagram generation (.excalidraw.md)
 ├── obsidian-tagging/SKILL.md      # tag taxonomy + enforcement
-├── obsidian-linking/SKILL.md      # backlinks, MOCs, orphan prevention
-└── obsidian-maintenance/SKILL.md  # dedupe, merge, refresh, restructure
+├── obsidian-linking/SKILL.md      # backlinks, MOCs, semantic links, orphans
+├── obsidian-maintenance/SKILL.md  # knowledge hygiene engine
+└── obsidian-doc-prompter/SKILL.md # after coding work: offers to document
 ```
+
+Recommended for reliable prompting after code changes — add one line to your project's `CLAUDE.md`:
+
+```markdown
+After completing any meaningful code change, consult the obsidian-doc-prompter skill.
+```
+
+## Core concepts
+
+### Project scope — everything lives under a project folder
+
+The vault is organized per project: each repository maps to **one top-level vault folder**, and every note about that project lives inside it.
+
+```
+<vault>/
+├── Home MOC.md                    # links every project's MOC
+└── <Project>/                     # e.g. "Acme Webshop" (from repo acme-webshop)
+    ├── <Project> MOC.md           # project entry point; frontmatter `repo:`
+    │                              #   stores the repo ↔ folder mapping
+    ├── Backend/   Frontend/   Features/   Architecture/
+    ├── ADRs/      Diagrams/   Integrations/   Infrastructure/
+    └── MOCs/                      # domain MOCs (Features MOC, ADRs MOC, …)
+```
+
+Skills resolve the project folder automatically from the repo they run in (matching `repo:` in project MOCs), asking once on first contact with a new repo. Feature-specific diagrams live next to their feature note, not in `Diagrams/`.
+
+### Repository awareness
+
+Every note carries provenance back to the code:
+
+```yaml
+project: "Acme Webshop"     # vault project folder
+repo: "acme/webshop"        # repository name or URL
+source: "a1b2c3d"           # commit/PR the note was verified against
+tags: [feature, backend/api, project/acme-webshop]
+```
+
+The `#project/<kebab-name>` tag makes a project's notes filterable by tag and graph view, not just folder. The `source:` commit gives maintenance an objective staleness signal: `git log <source>..HEAD -- <path>`.
+
+### Grounding (anti-hallucination)
+
+Defined once in `conventions.md`, binding for all skills: every factual claim must trace to the diff, code, conversation, or an existing note; exact names are copied from code, never reconstructed; unknowns become `> [!question] TODO: confirm` callouts instead of confident guesses; the business "why" is never reverse-engineered from code — it comes from the conversation or the user. Conflicts (code vs. conversation, code vs. existing note) are surfaced, not silently resolved.
+
+### Safety guards
+
+No secrets, credentials, or personal data in the vault (reference by location: "key lives in `STRIPE_SECRET`"). Idempotent re-runs — documenting the same topic twice converges on one updated note, never a duplicate. Runs touching more than ~20 existing notes pause for approval. Renames are maintenance-only operations (they break inbound links) and always include a vault-wide link rewrite.
 
 ## How it works
 
-`obsidian-documentation` is the router and quality gate. It gathers context (conversation, git diff, repo structure, existing vault notes, commit history), classifies intent, delegates to specialists, and verifies the combined output for consistency. It never writes specialist content itself; if context is missing it asks instead of guessing.
+`obsidian-documentation` is the router and quality gate. It resolves project scope, gathers context (conversation, git diff, repo structure, existing vault notes, commit history), classifies intent, delegates to specialists, and verifies the combined output. It never writes specialist content itself; if context is missing it asks instead of guessing.
 
-Every run ends with a cross-cutting pass: **obsidian-tagging** then **obsidian-linking**, so every note lands consistently in the knowledge graph.
+Every run ends with a cross-cutting pass — **obsidian-tagging** then **obsidian-linking** — so each note lands consistently in the knowledge graph.
 
-## Delegation table
+### Delegation
 
 | Intent | Primary skill | Usually also runs |
 |---|---|---|
@@ -42,21 +95,47 @@ Every run ends with a cross-cutting pass: **obsidian-tagging** then **obsidian-l
 | A decision was made | obsidian-adr | architecture, linking |
 | Diagram request | obsidian-excalidraw | linking |
 | Tag concerns | obsidian-tagging | — |
-| MOCs / backlinks / orphans | obsidian-linking | — |
+| MOCs / backlinks / orphans / concept gaps | obsidian-linking | — |
 | Cleanup / dedupe / stale docs | obsidian-maintenance | tagging, linking |
+| Just finished coding something | obsidian-doc-prompter | → orchestrator on yes |
+
+`obsidian-doc-prompter` sits *upstream* of the orchestrator: after meaningful coding work it names the affected notes ("update Payment Processing.md, new Refunds note + diagram, possible ADR — all/some/skip?"), asks for consent, and hands the approved scope over. It stays quiet on trivial changes, prompts at most once per change, and never writes to the vault itself.
+
+### Scanner agents
+
+Two read-only subagents keep noisy file-sweeps out of the main context; all *writing* stays in the main conversation, where the business "why" lives. Skills fall back to inline scanning when agents are unavailable.
+
+- **code-context-collector** — produces the grounding fact sheet before feature/architecture docs are written: exact endpoints, tables, components with file paths, HEAD sha for `source:`, env var names (never values), and open questions for the user. Quotes commit messages for intent but never invents it.
+- **vault-scanner** — runs the audits for maintenance/tagging/linking: tag inventory, orphan detection, duplicate candidates (with overlap shape: full/partial/aspect), naming/structure drift, stale `source:` commits, and concept gaps. Returns findings with evidence, including explicit "clean" results.
+
+## Specialist highlights
+
+- **obsidian-feature** — one capability end to end; main note + Backend/Frontend sub-notes for larger features; flags diagram and ADR candidates instead of creating them.
+- **obsidian-architecture** — current system shape at three levels (one System Overview per project, domain notes, integration notes). Includes "where does this belong" rules (architecture vs. feature vs. ADR), PARA / Johnny Decimal awareness (adapts to an existing vault philosophy, never imposes a second hierarchy), and long-term maintainability rules.
+- **obsidian-adr** — numbered, immutable records with mandatory alternatives and consequences; changes supersede, never rewrite.
+- **obsidian-excalidraw** — valid `.excalidraw.md` for the Excalidraw plugin, 5–12 elements per diagram, consistent palette, placed next to the owning note and embedded via `![[name.excalidraw]]`.
+- **obsidian-tagging** — hierarchical lowercase taxonomy (`#backend/graphql`); reuse-before-invent; assign mode every run, audit mode for drift.
+- **obsidian-linking** — structural links (note→MOC, ADR→affected) enforced; conceptual links suggested only with a written reason; missing-link/concept-gap detection; cluster → MOC suggestions; MOC chain `Home MOC → Project MOC → domain MOCs`.
+- **obsidian-maintenance** — knowledge hygiene engine: split / merge / extract-concept / atomicize workflows, dedup strategies by overlap shape, drift detection, rename ownership, periodic cleanup mindset. Destructive changes always proposed before applied; ADRs are never deleted.
 
 ## Example flows
 
-**"Document the refunds feature from this PR"** → orchestrator reads the diff and searches the vault → obsidian-feature writes `Features/Refunds/Refunds.md` (+ Backend/Frontend sub-notes) → obsidian-excalidraw adds `Refunds Sequence.excalidraw.md` next to it → tagging assigns `feature`, `backend/api`, `frontend/react` → linking connects it to `Payment Processing`, `Stripe`, and `Features MOC`.
+**"Document the refunds feature from this PR"** → orchestrator resolves the project folder from the repo → code-context-collector returns the fact sheet (endpoint, table, component names + HEAD sha) → obsidian-feature writes `<Project>/Features/Refunds/Refunds.md` (+ sub-notes) → obsidian-excalidraw adds `Refunds Sequence.excalidraw.md` next to it → tagging assigns `feature`, `backend/api`, `frontend/react`, `project/acme-webshop` → linking connects it to `Payment Processing`, `Stripe`, and `Features MOC`.
 
-**"We chose Postgres over DynamoDB for orders"** → obsidian-adr writes `ADRs/ADR-0012 - Use Postgres for Orders Service.md` → obsidian-architecture updates the orders overview → linking wires ADR ↔ architecture both ways.
+**"We chose Postgres over DynamoDB for orders"** → obsidian-adr writes `<Project>/ADRs/ADR-0012 - Use Postgres for Orders Service.md` → obsidian-architecture updates the orders overview → linking wires ADR ↔ architecture both ways.
 
-**"The vault is getting messy"** → obsidian-maintenance audits, proposes merges/deletions for approval, applies them, then tagging+linking repair the graph.
+**Claude just finished implementing rate limiting** → obsidian-doc-prompter: "This added rate limiting to the API. Document it? Would update `Architecture/API Layer.md`, add a feature note, possible ADR (token bucket over fixed window). All / some / skip?" → on yes, orchestrator runs the approved scope.
 
-## Vault conventions (enforced everywhere)
+**"The vault is getting messy"** → obsidian-maintenance sends vault-scanner sweeping → proposes merges/renames/deletions for approval → applies them → tagging + linking repair the graph.
 
-Defined once in `obsidian-documentation/references/conventions.md`: folder layout (`Backend/ Frontend/ Features/ Architecture/ ADRs/ Diagrams/ Integrations/ Infrastructure/ MOCs/`), frontmatter template, Title Case naming, hierarchical lowercase tags (`#backend/graphql`), bidirectional `[[wiki links]]`, no orphans, update-before-create, plain-language why-first writing.
+## Writing style (all generated docs)
+
+Plain language for non-experts, the **why** before the how, business context before technical detail, 2–3 sentence plain-language summary at the top of every note, concrete examples, shorter-but-grounded over complete-looking-but-invented.
 
 ## Extending
 
-Add a new specialist (e.g., `obsidian-runbook`) by creating its skill folder, pointing it at `references/conventions.md`, and adding one row to the orchestrator's routing table. Specialists never duplicate each other's responsibilities — diagrams belong to excalidraw, tags to tagging, links to linking, regardless of which skill is primary.
+Add a new specialist (e.g., `obsidian-runbook`) by creating its skill folder, pointing it at `references/conventions.md`, and adding one row to the orchestrator's routing table. Specialists never duplicate each other's responsibilities — diagrams belong to excalidraw, tags to tagging, links to linking, merges/renames to maintenance, regardless of which skill is primary.
+
+## Official Obsidian references
+
+Skills consult these instead of guessing syntax: [links](https://help.obsidian.md/links) · [properties](https://help.obsidian.md/properties) · [tags](https://help.obsidian.md/tags) · [callouts](https://help.obsidian.md/callouts) · [aliases](https://help.obsidian.md/aliases) · [Excalidraw plugin](https://github.com/zsviczian/obsidian-excalidraw-plugin)
