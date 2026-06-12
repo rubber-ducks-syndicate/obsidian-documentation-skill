@@ -40,7 +40,7 @@ Pick the level the request needs; don't write all three by default:
 ## Process
 
 1. Search the vault for existing architecture notes — update before creating. The System Overview in particular should be **maintained**, never forked.
-2. Establish facts from repo structure, configs (docker-compose, terraform, package.json), and the conversation. If the conversation describes a *target* architecture vs. *current* code, ask which one to document.
+2. Establish facts from repo structure, configs (docker-compose, terraform, package.json), and the conversation. For whole-system or multi-service scopes, delegate fact-gathering to the **code-context-collector** agent (read-only fact sheet with file paths and HEAD sha); scan inline if agents are unavailable. If the conversation describes a *target* architecture vs. *current* code, ask which one to document.
 3. Write the note(s): plain language, why-first. A reader should understand what each component is **for** before how it works.
 4. Flag diagram candidates to the orchestrator (component diagram for overviews, flow diagram for data paths) — obsidian-excalidraw draws them; you embed the result.
 5. If the discussion included a *decision* (chose X over Y), tell the orchestrator an ADR is warranted.

@@ -31,7 +31,13 @@ Collect whatever exists, in this order of usefulness:
 | Existing vault notes | Search the vault folder for related notes by filename and content (`grep -ril "<topic>" <vault>/`) |
 | Related code files | Files touched by the diff plus their direct dependencies |
 
+**Resolve project scope first.** All notes live under one project folder: `<vault>/<Project>/` (see conventions.md). Determine the project from the repo you're in — check existing project MOCs for a matching `repo:` field; if none matches, propose a folder name derived from the repo name and confirm with the user before creating it. Every note in the run gets `project:`/`repo:` frontmatter and the `#project/<kebab-name>` tag.
+
 If the vault location is unknown, ask for it. If the request is ambiguous ("document the changes" — which changes? for whom?), ask before delegating.
+
+Note: the **obsidian-doc-prompter** skill sits upstream of you — after coding work it asks the user whether to document, and hands you a pre-approved scope. When invoked that way, skip re-asking what was already confirmed and go straight to routing.
+
+Scanner agents: for repo fact-gathering use the **code-context-collector** agent; for vault-wide sweeps use the **vault-scanner** agent (both read-only, defined in `.claude/agents/`). They keep file-read noise out of this context and return just findings. If agents are unavailable, scan inline — same steps, same outputs.
 
 ## Step 2 — Classify intent and route
 

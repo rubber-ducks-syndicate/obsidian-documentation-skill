@@ -51,7 +51,9 @@ While linking, watch for clusters: 4+ notes that keep linking to each other, or 
 
 ## MOCs
 
-A MOC (Map of Content) is a curated index note in `MOCs/`, one per major domain: `Features MOC.md`, `Architecture MOC.md`, `ADRs MOC.md`, `Backend MOC.md`, `Frontend MOC.md`, `Integrations MOC.md`, `Infrastructure MOC.md`, plus a root `Home MOC.md` linking to all MOCs.
+A MOC (Map of Content) is a curated index note. The hierarchy is project-scoped: vault-root `Home MOC.md` → `<Project>/<Project> MOC.md` (the project's entry point; its frontmatter `repo:` field maps the repository to this folder) → domain MOCs in `<Project>/MOCs/`, one per major domain: `Features MOC.md`, `Architecture MOC.md`, `ADRs MOC.md`, `Backend MOC.md`, `Frontend MOC.md`, `Integrations MOC.md`, `Infrastructure MOC.md`.
+
+When documenting a project for the first time, create the project MOC and add it to `Home MOC.md` in the same run — a project folder unreachable from Home is a project-sized orphan.
 
 Create a MOC when a domain has 5+ notes, or when the orchestrator's run introduces a new domain. Don't create empty placeholder MOCs.
 
@@ -80,6 +82,8 @@ tags: [moc]
 Group by theme, not alphabetically — a MOC is a guided tour, not a file listing.
 
 ## Orphan detection
+
+On vaults beyond a handful of folders, delegate orphan + concept-gap detection to the **vault-scanner** agent (read-only; returns findings only). Inline fallback:
 
 ```bash
 # Notes never referenced by any wiki link (candidate orphans):

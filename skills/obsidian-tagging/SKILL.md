@@ -35,7 +35,7 @@ grep -rhoE '#[a-z][a-z0-9/_-]+' <vault> --include='*.md' | sort | uniq -c | sort
 
 **Assign mode** (every orchestrator run): take the run's new/updated notes, assign tags from the taxonomy, ensure all notes in the run use identical spelling, write tags into frontmatter.
 
-**Audit mode** (tag cleanup requests, or when you spot drift): inventory all tags; find near-duplicates (`#front-end` vs `#frontend`), wrong format (`#Backend`, plurals), single-use orphan tags, and untagged notes. Propose a rename map to the user **before** mass-editing, then apply it across the vault.
+**Audit mode** (tag cleanup requests, or when you spot drift): get the inventory from the **vault-scanner** agent (tag-inventory scan; run the grep above inline if agents are unavailable); find near-duplicates (`#front-end` vs `#frontend`), wrong format (`#Backend`, plurals), single-use orphan tags, and untagged notes. Propose a rename map to the user **before** mass-editing, then apply it across the vault.
 
 ## Example
 

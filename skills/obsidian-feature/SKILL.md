@@ -18,6 +18,8 @@ Read `../obsidian-documentation/references/conventions.md` first — folder stru
 
 Git diff and touched files (what actually changed), the conversation (intent and business reason), existing vault notes about this feature or its neighbors, and related code (handlers, components, schemas). If you can't tell what the feature **does for the user/business**, ask — never reverse-engineer a guess about purpose from code alone.
 
+For non-trivial changes, get the technical facts via the **code-context-collector** agent (read-only; returns exact endpoint/table/component names with file paths, HEAD sha for `source:`, and open questions). Write from its fact sheet — it's your grounding source. If agents are unavailable, extract the same facts inline.
+
 ## Process
 
 1. **Check for an existing note.** Search `Features/` (and Backend/, Frontend/) for this feature. If found, update it instead of creating a new one.

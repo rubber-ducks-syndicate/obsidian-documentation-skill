@@ -15,11 +15,13 @@ Read `../obsidian-documentation/references/conventions.md` first.
 
 **Deduplicate / merge.** Find notes covering the same topic (similar titles, heavy content overlap — compare with `grep`/diff, not just filenames). Merge into the better-located note: union of correct content, one set of frontmatter (earliest `created`, today's `updated`), union of tags and Related links. The losing note is deleted and every `[[link]]` to it across the vault is rewritten to the survivor.
 
-**Refresh stale notes.** A note is stale when code contradicts it (check against current repo/diff), `status: active` but the feature is gone, or `updated` is ancient for a fast-moving area. Fix the content; if the *thing itself* is gone, set `status: deprecated` and say what replaced it — don't silently delete history.
+**Refresh stale notes.** A note is stale when code contradicts it (check against current repo/diff), its frontmatter `source:` commit is far behind the current HEAD for files in that area (`git log --oneline <source>..HEAD -- <path>`), `status: active` but the feature is gone, or `updated` is ancient for a fast-moving area. Prefer the `source:` signal over dates — it's objective. When refreshing, update `source:` to the commit you verified against. Fix the content; if the *thing itself* is gone, set `status: deprecated` and say what replaced it — don't silently delete history.
+
+**Rename.** You are the only skill allowed to rename notes (renames break inbound links). Every rename happens together with a vault-wide link rewrite, and keeps the old title as a frontmatter alias so stray references still resolve.
 
 **Restructure.** When a folder gets crowded (≳15 notes) or topics outgrow their home, propose moves into subfolders per conventions.md. After any move, rewrite links if paths appear in them and re-run the linking pass.
 
-**Audit.** On "vault health check" requests, report: duplicate candidates, orphans (delegate detection to obsidian-linking), tag drift (delegate to obsidian-tagging), stale notes, structural hotspots. Lead with a prioritized list of suggested fixes.
+**Audit.** Run the sweeps via the **vault-scanner** agent (read-only: tag-inventory, orphans, duplicates, drift, staleness — it returns findings without flooding context; scan inline if agents are unavailable). On "vault health check" requests, report: duplicate candidates, orphans (delegate detection to obsidian-linking), tag drift (delegate to obsidian-tagging), stale notes, structural hotspots. Lead with a prioritized list of suggested fixes.
 
 ## Note refactoring workflows
 

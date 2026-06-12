@@ -66,6 +66,8 @@ Element essentials (uncompressed JSON; the plugin accepts it and will manage com
 
 Use a consistent palette: components `#a5d8ff` (blue), external systems `#ffec99` (yellow), data stores `#b2f2bb` (green), problem/legacy areas `#ffc9c9` (red).
 
+If the format ever behaves unexpectedly in the plugin, check the official plugin docs rather than guessing: https://github.com/zsviczian/obsidian-excalidraw-plugin
+
 ## Process
 
 1. Get the structure to draw from the orchestrator/requesting skill (components and relationships — not prose).
