@@ -4,22 +4,24 @@ A modular orchestrator + specialists ecosystem for Claude Code that turns code c
 
 ## Installation
 
-Copy `skills/` and `agents/` into your project's `.claude/` directory:
+These are **global (user-level) skills** — install them once in your home `.claude/` directory and they work across every repository on your machine:
 
 ```bash
-cp -r skills/* <your-repo>/.claude/skills/
-cp -r agents/* <your-repo>/.claude/agents/
+cp -r skills/* ~/.claude/skills/
+cp -r agents/* ~/.claude/agents/
 ```
+
+Global installation matters for this system: `config.md` (vault path + repo→project mappings) lives inside the orchestrator skill, and there must be exactly **one** copy of it. Installing per-repo would duplicate config.md into every repository and the copies would drift. Per-repo installation (`<repo>/.claude/`) is only sensible if a single repo needs a deliberately different setup — and then it shadows the global one for that repo.
 
 Result:
 
 ```
-.claude/agents/
+~/.claude/agents/
 ├── vault-scanner.md               # read-only vault sweeps (tags, orphans,
 │                                  #   duplicates, drift, staleness, concept gaps)
 └── code-context-collector.md      # read-only repo fact sheets for grounded docs
 
-.claude/skills/
+~/.claude/skills/
 ├── obsidian-documentation/        # ← the ONLY entrypoint you invoke directly
 │   ├── SKILL.md                   #   router, context gathering, quality gate
 │   └── references/
