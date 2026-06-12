@@ -2,39 +2,59 @@
 
 Single source of truth for every skill in the obsidian-documentation ecosystem. If a specialist skill contradicts this file, this file wins.
 
+## Vault location & repo mapping — [config.md](config.md)
+
+All configuration lives in **`references/config.md` next to this file** — no per-project CLAUDE.md entries required. It holds `vault_path` and the repo→project mappings. Resolution order:
+
+1. `config.md` (`vault_path` + matching `projects:` entry for the current repo)
+2. The user stated it earlier in this conversation
+3. Otherwise: **ask** — then write the answer back into `config.md` so it's never asked again
+
+Never guess a vault path or write notes to an assumed location.
+
 ## Project scope — the root concept
 
-The vault is organized **per project**. Each documented project (usually one repository, sometimes a small group of related repos) gets one top-level folder in the vault, and **everything** about that project lives under it:
+The vault is organized **per business project**, and projects contain **repositories**. A project (e.g., "Atlas") is one top-level vault folder; each of its repos gets a subfolder inside it. Everything about the project lives under its folder:
 
 ```
 <vault>/
 ├── Home MOC.md            # vault root: links every project's MOC
-├── <Project A>/           # e.g. "Webshop Platform" — all Project A notes
+├── Atlas/              # business project
 └── <Project B>/
 ```
 
-- Default project folder name: a human-readable version of the repo name (`acme-webshop` → `Acme Webshop`). Confirm with the user on first contact with a new repo, then reuse.
-- The repo ↔ project-folder mapping is recorded in the project's MOC frontmatter (`repo:` field), so every later run resolves the right folder automatically from the repo it's working in.
+- Project and repo-folder names are human-readable Title Case (`atlas-web` → repo folder `Web App` or `Atlas Web` — confirm with the user on first contact, then reuse).
+- The repo ↔ project mapping is recorded in [config.md](config.md) (`projects:` list with nested `repos:`) — the source of truth every run resolves against. MOC frontmatter may mirror it, but config.md wins on conflict.
 - Never write project-specific notes outside the project folder. Cross-project comparisons or company-wide notes are the only thing allowed beside project folders (and they link into the projects).
 
 ## Folder structure (inside each project folder)
 
+Two levels: **project level** for everything that spans repositories, **repo level** for repo-specific docs.
+
 ```
-<vault>/<Project>/
-├── <Project> MOC.md   # project home: entry point, links all project MOCs
-├── Backend/           # Backend domain notes (services, APIs, data models)
-├── Frontend/          # Frontend domain notes (apps, components, state)
-├── Features/          # One subfolder per feature: Features/<Feature Name>/
-├── Architecture/      # System design, component overviews, data flow
-├── ADRs/              # Architecture Decision Records (flat, numbered per project)
-├── Diagrams/          # Shared/cross-cutting diagrams only — feature-specific
-│                      #   diagrams live NEXT TO their feature note
-├── Integrations/      # Third-party services, external APIs
-├── Infrastructure/    # AWS, CI/CD, deployment, networking
-└── MOCs/              # Maps of Content (one per major domain)
+<vault>/<Project>/                    # e.g. Atlas/
+├── <Project> MOC.md       # project home: entry point, links repos + domain MOCs
+├── Architecture/          # cross-repo system design, how the repos fit together
+├── ADRs/                  # decision records (numbered per project — decisions
+│                          #   often span repos)
+├── MOCs/                  # project-wide Maps of Content (one per major domain)
+└── <Repo>/                # one folder per repository, e.g. Web App/, API/
+    ├── <Repo> MOC.md      # repo home: entry point for this repo's notes
+    ├── Backend/           # services, APIs, data models
+    ├── Frontend/          # apps, components, state
+    ├── Features/          # one subfolder per feature: Features/<Feature Name>/
+    ├── Architecture/      # repo-internal design (cross-repo design goes up a level)
+    ├── Diagrams/          # shared/cross-cutting diagrams only — feature-specific
+    │                      #   diagrams live NEXT TO their feature note
+    ├── Integrations/      # third-party services this repo talks to
+    └── Infrastructure/    # AWS, CI/CD, deployment for this repo
 ```
 
-Create subfolders automatically when context warrants it (e.g., `Features/Payments/`, `Backend/GraphQL/`). Never dump notes at the project root (except the project MOC) or the vault root.
+Placement rule: if a note concerns one repo, it lives under that repo's folder; if it spans repos (system architecture, project decisions, shared integrations), it lives at project level. A single-repo project still uses a repo subfolder — it keeps the structure uniform and painless to extend when repo #2 arrives.
+
+Create subfolders automatically when context warrants it (e.g., `Features/Payments/`, `Backend/GraphQL/`). Never dump notes at the project or repo root (except their MOCs) or the vault root.
+
+**Machine files live in a hidden folder.** The auto-generated index and log (owned by obsidian-query) live at `<vault>/.claude-docs/<Project>/index.md` and `log.md`. Obsidian hides dot-folders entirely, so the vault stays clean for humans while skills keep fast retrieval. Nothing else goes in `.claude-docs/`.
 
 ## Note naming
 
@@ -60,8 +80,8 @@ status: draft | active | deprecated
 tags: [feature, backend/graphql]
 related: ["[[Other Note]]"]
 aliases: []          # optional: acronyms/synonyms for natural linking
-project: ""          # project folder name, e.g. "Acme Webshop"
-repo: ""             # repository name or URL, e.g. "acme/webshop"
+project: ""          # business project (top-level folder), e.g. "Atlas"
+repo: ""             # repository this note documents, e.g. "acme/atlas-web"
 source: ""           # for code-derived notes: commit sha, PR, or branch
 ---
 ```
@@ -74,14 +94,14 @@ Use real dates. Update `updated` whenever a note changes. Keep `tags` in frontma
 
 Hierarchical, lowercase, singular: `#backend`, `#backend/graphql`, `#frontend/react`, `#feature`, `#architecture`, `#adr`, `#aws`, `#aws/lambda`, `#integration`, `#infrastructure`, `#moc`. Reuse existing tags before inventing new ones.
 
-**Project/repo tag**: every note also carries `#project/<kebab-name>` (e.g., `#project/acme-webshop`, derived from the repo name). This makes a project's notes findable by tag and graph filter even when viewed outside their folder; multi-repo projects can carry one tag per repo.
+**Project/repo tags**: every note carries `#project/<kebab-name>` (e.g., `#project/atlas`); repo-specific notes additionally carry `#repo/<kebab-name>` (e.g., `#repo/atlas-web`). Both come from config.md. This makes a project's or repo's notes findable by tag and graph filter even when viewed outside their folder.
 
 ## Links (summary — obsidian-linking owns the rules)
 
 - Wiki links only: `[[Note Name]]`, with aliases when needed: `[[Payment Processing|payments]]`
 - Every link must be bidirectional — if A links to B, ensure B has a "Related" section linking back to A
-- Every note must be reachable from at least one MOC. No orphans. The chain is: vault `Home MOC` → `<Project> MOC` → domain MOCs → notes.
-- Note names may repeat across projects (`Authentication.md` in two projects) — when ambiguous, link by path: `[[Acme Webshop/Features/Auth/Authentication]]`
+- Every note must be reachable from at least one MOC. No orphans. The chain is: vault `Home MOC` → `<Project> MOC` → `<Repo> MOC` / domain MOCs → notes.
+- Note names may repeat across projects and repos (`Authentication.md` in two repos) — when ambiguous, link by path: `[[Atlas/Web App/Features/Auth/Authentication]]`
 - Embed diagrams: `![[Auth Flow.excalidraw]]`
 
 ## Writing style

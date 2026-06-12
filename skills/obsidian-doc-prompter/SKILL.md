@@ -43,12 +43,6 @@ Also stay quiet if the user already declined to document this same change earlie
 - The offer must name affected existing notes when there are any — that's what makes it worth interrupting.
 - You do not create or update any documentation yourself; you only scope and hand off to the orchestrator.
 
-## Making it automatic (optional, tell the user once)
+## Making it automatic (optional)
 
-Skill triggering depends on Claude noticing; for a guaranteed prompt, the user can add one line to the project's `CLAUDE.md`:
-
-```markdown
-After completing any meaningful code change, consult the obsidian-doc-prompter skill.
-```
-
-Mention this option the first time this skill fires in a project, then don't repeat it.
+Skill triggering depends on Claude noticing. If the user mentions missed documentation prompts, point out the option of adding one line to the project's `CLAUDE.md` ("After completing any meaningful code change, consult the obsidian-doc-prompter skill."). Don't suggest it unprompted — some users deliberately keep project CLAUDE.md files free of such entries.

@@ -51,9 +51,9 @@ While linking, watch for clusters: 4+ notes that keep linking to each other, or 
 
 ## MOCs
 
-A MOC (Map of Content) is a curated index note. The hierarchy is project-scoped: vault-root `Home MOC.md` → `<Project>/<Project> MOC.md` (the project's entry point; its frontmatter `repo:` field maps the repository to this folder) → domain MOCs in `<Project>/MOCs/`, one per major domain: `Features MOC.md`, `Architecture MOC.md`, `ADRs MOC.md`, `Backend MOC.md`, `Frontend MOC.md`, `Integrations MOC.md`, `Infrastructure MOC.md`.
+A MOC (Map of Content) is a curated index note. The hierarchy follows the vault structure: vault-root `Home MOC.md` → `<Project>/<Project> MOC.md` (business-project entry point: links its repo MOCs, Architecture, ADRs, domain MOCs) → `<Project>/<Repo>/<Repo> MOC.md` (one per repository) and domain MOCs in `<Project>/MOCs/` (`Features MOC.md`, `Architecture MOC.md`, `ADRs MOC.md`, …). Domain MOCs span the whole project — a `Features MOC` lists features from all repos, grouped by repo when that helps.
 
-When documenting a project for the first time, create the project MOC and add it to `Home MOC.md` in the same run — a project folder unreachable from Home is a project-sized orphan.
+When documenting a project or repo for the first time, create its MOC and link it from the level above in the same run — a folder unreachable from Home is an orphan at scale.
 
 Create a MOC when a domain has 5+ notes, or when the orchestrator's run introduces a new domain. Don't create empty placeholder MOCs.
 

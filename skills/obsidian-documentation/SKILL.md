@@ -31,9 +31,9 @@ Collect whatever exists, in this order of usefulness:
 | Existing vault notes | Search the vault folder for related notes by filename and content (`grep -ril "<topic>" <vault>/`) |
 | Related code files | Files touched by the diff plus their direct dependencies |
 
-**Resolve project scope first.** All notes live under one project folder: `<vault>/<Project>/` (see conventions.md). Determine the project from the repo you're in — check existing project MOCs for a matching `repo:` field; if none matches, propose a folder name derived from the repo name and confirm with the user before creating it. Every note in the run gets `project:`/`repo:` frontmatter and the `#project/<kebab-name>` tag.
+**Resolve vault + scope first** from [references/config.md](references/config.md): `vault_path`, then the **project** (business initiative, e.g. "Atlas") and **repo subfolder** matching the current repository in the nested `projects:`/`repos:` lists. Repo not listed → propose a project (existing if it clearly belongs, else new) + repo folder name, confirm with the user, append to config.md. Empty `vault_path` → ask, then write it back so it's never asked again. Every note gets `project:`/`repo:` frontmatter plus `#project/<name>` (and `#repo/<name>` for repo-level notes). Placement: repo-specific notes under `<Project>/<Repo>/…`; cross-repo content (system architecture, ADRs) at project level — see conventions.md.
 
-If the vault location is unknown, ask for it. If the request is ambiguous ("document the changes" — which changes? for whom?), ask before delegating.
+If the request is ambiguous ("document the changes" — which changes? for whom?), ask before delegating.
 
 Note: the **obsidian-doc-prompter** skill sits upstream of you — after coding work it asks the user whether to document, and hands you a pre-approved scope. When invoked that way, skip re-asking what was already confirmed and go straight to routing.
 
@@ -50,6 +50,7 @@ Scanner agents: for repo fact-gathering use the **code-context-collector** agent
 | Tag questions, tag cleanup, taxonomy | obsidian-tagging | `../obsidian-tagging/SKILL.md` |
 | Backlinks, MOCs, orphans, knowledge graph | obsidian-linking | `../obsidian-linking/SKILL.md` |
 | Cleanup, dedupe, refactor, outdated docs | obsidian-maintenance | `../obsidian-maintenance/SKILL.md` |
+| Question answered FROM the vault ("how does X work", "why did we choose Y", "find the docs about…") | obsidian-query | `../obsidian-query/SKILL.md` |
 
 Routing notes:
 
@@ -74,6 +75,7 @@ Before presenting results, check the package as a whole:
 - Existing notes that reference this topic were updated, not duplicated
 - Diagrams sit next to their related notes and are embedded with `![[name.excalidraw]]`
 - The relevant MOC includes the new notes
+- The project's index (`<vault>/.claude-docs/<Project>/index.md`) reflects every created/updated/deleted note and `log.md` got its run entry (delegate to obsidian-query — it owns both files)
 
 Then summarize for the user: what was created, what was updated, where it lives, and any suggested follow-ups (e.g., "the Integrations folder is getting crowded — want a maintenance pass?").
 
